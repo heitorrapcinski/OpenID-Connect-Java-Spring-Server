@@ -8,7 +8,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
 
 ## Tarefas
 
-- [ ] 1. Preservar código legado e preparar workspace
+- [x] 1. Preservar código legado e preparar workspace
   - Mover todo o conteúdo da pasta raiz do workspace (exceto a pasta `.kiro`) para uma nova pasta `legacy/`
   - Isso preserva o código original do monolito como referência durante a implementação da nova arquitetura
   - Arquivos a mover: todos os diretórios e arquivos na raiz (openid-connect-server, openid-connect-client, openid-connect-common, etc.), exceto `.kiro/`
