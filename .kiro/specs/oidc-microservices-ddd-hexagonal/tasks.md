@@ -294,8 +294,8 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
   - [x] 6.9 Checkpoint — oidc-provider
     - Garantir que todos os testes do oidc-provider passam. Verificar que `GET /.well-known/openid-configuration` retorna documento de discovery correto. Perguntar ao usuário se há dúvidas antes de continuar.
 
-- [ ] 7. Implementar microserviço `uma-server`
-  - [ ] 7.1 Criar estrutura de pacotes hexagonal e domínio do uma-server
+- [x] 7. Implementar microserviço `uma-server`
+  - [x] 7.1 Criar estrutura de pacotes hexagonal e domínio do uma-server
     - Criar `uma-server/pom.xml` com dependências: spring-boot-starter-web, spring-boot-starter-data-mongodb, spring-boot-starter-security, spring-boot-starter-actuator, spring-kafka, nimbus-jose-jwt
     - Criar `ResourceSet` Aggregate Root com entidades internas `Policy` e `Claim`; Value Objects: `ResourceSetId`, `Owner`, `ClientId`
     - Criar `PermissionTicket` Aggregate Root com Value Objects: `TicketValue`, `Permission` (resourceSetId + scopes), `ClaimsSupplied`; invariante: expira após TTL configurado
@@ -311,7 +311,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Testar avaliação de `Policy`: claims insuficientes lançam `InsufficientClaimsException`
     - _Requirements: 3.12, 9.7, 9.8, 9.9_
 
-  - [ ] 7.3 Implementar Application Services do uma-server
+  - [x] 7.3 Implementar Application Services do uma-server
     - Implementar `ResourceSetService` para CRUD de ResourceSet
     - Implementar `PermissionTicketService` para criação de PermissionTicket
     - Implementar `RptIssuanceService` para emissão de RPT: avaliar Policies do ResourceSet, verificar Claims fornecidos
@@ -319,20 +319,20 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Publicar Domain Events via `DomainEventPublisher`
     - _Requirements: 2.5, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9_
 
-  - [ ] 7.4 Implementar adapters de persistência MongoDB do uma-server
+  - [x] 7.4 Implementar adapters de persistência MongoDB do uma-server
     - Criar `MongoResourceSetRepository`, `MongoPermissionTicketRepository`
     - Criar documentos com `@Document`; `Policy` e `Claim` como subdocumentos embutidos em `resource_sets`; `Permission` e `ClaimsSupplied` embutidos em `permission_tickets`
     - Criar índices: `resource_sets` — em `owner`, composto em `(owner, clientId)`, em `clientId`; `permission_tickets` — único em `ticket`, TTL em `expiration`
     - Implementar optimistic locking via `@Version`
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.7_
 
-  - [ ] 7.5 Implementar adapter Kafka do uma-server
+  - [x] 7.5 Implementar adapter Kafka do uma-server
     - Criar `KafkaDomainEventPublisher` publicando eventos: `uma.resource.registered`, `uma.permission.created`
     - Criar consumer para tópico `auth.token.revoked` para invalidar RPTs associados ao token revogado
     - Configurar Dead Letter Topic
     - _Requirements: 4.8, 4.9, 4.10, 4.11_
 
-  - [ ] 7.6 Implementar REST adapter do uma-server
+  - [x] 7.6 Implementar REST adapter do uma-server
     - Criar `ResourceSetEndpoint` (`POST/GET/PUT/DELETE /uma/resource_set`, `GET /uma/resource_set`) e `PermissionEndpoint` (`POST /uma/permission`)
     - Criar `GlobalExceptionHandler` mapeando exceções de domínio para respostas UMA
     - Criar `SecurityConfig`: todos os endpoints UMA exigem Bearer token com escopo UMA
@@ -340,7 +340,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Criar classe `UmaServerApplication` com `@SpringBootApplication`
     - _Requirements: 1.4, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7_
 
-  - [ ] 7.7 Checkpoint — uma-server
+  - [x] 7.7 Checkpoint — uma-server
     - Garantir que todos os testes do uma-server passam. Verificar que `POST /uma/resource_set` cria ResourceSet e publica evento. Perguntar ao usuário se há dúvidas antes de continuar.
 
 
