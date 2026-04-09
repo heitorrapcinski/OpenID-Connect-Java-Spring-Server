@@ -1,0 +1,97 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        # authorization-server — OAuth 2.0 endpoints
+        - id: authorization-server
+          uri: http://authorization-server:8080
+          predicates:
+            - Path=/authorize,/token,/revoke,/introspect,/device_authorization
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authorization-server-cb
+                fallbackUri: forward:/fallback/503
+
+        # client-registry — Dynamic Client Registration
+        - id: client-registry
+          uri: http://client-registry:8081
+          predicates:
+            - Path=/register,/register/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: client-registry-cb
+                fallbackUri: forward:/fallback/503
+
+        # oidc-provider — UserInfo, Discovery, JWKS, Logout
+        - id: oidc-provider
+          uri: http://oidc-provider:8082
+          predicates:
+            - Path=/userinfo,/.well-known/openid-configuration,/jwks,/end_session
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: oidc-provider-cb
+                fallbackUri: forward:/fallback/503
+
+        # uma-server — UMA 2.0
+        - id: uma-server
+          uri: http://uma-server:8083
+          predicates:
+            - Path=/uma/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: uma-server-cb
+                fallbackUri: forward:/fallback/503
+
+        # scope-manager — System Scopes
+        - id: scope-manager
+          uri: http://scope-manager:8084
+          predicates:
+            - Path=/scopes/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: scope-manager-cb
+                fallbackUri: forward:/fallback/503
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      authorization-server-cb:
+        base-config: default
+      client-registry-cb:
+        base-config: default
+      oidc-provider-cb:
+        base-config: default
+      uma-server-cb:
+        base-config: default
+      scope-manager-cb:
+        base-config: default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true

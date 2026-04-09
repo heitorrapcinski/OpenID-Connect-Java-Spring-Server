@@ -344,8 +344,8 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Garantir que todos os testes do uma-server passam. Verificar que `POST /uma/resource_set` cria ResourceSet e publica evento. Perguntar ao usuário se há dúvidas antes de continuar.
 
 
-- [ ] 8. Implementar API Gateway
-  - [ ] 8.1 Criar módulo api-gateway com Spring Cloud Gateway
+- [x] 8. Implementar API Gateway
+  - [x] 8.1 Criar módulo api-gateway com Spring Cloud Gateway
     - Criar `api-gateway/pom.xml` com dependências: spring-cloud-starter-gateway, spring-boot-starter-actuator, spring-cloud-starter-circuitbreaker-resilience4j
     - Criar `application.yml` com rotas:
       - `/authorize`, `/token`, `/revoke`, `/introspect`, `/device_authorization` → `authorization-server:8080`
@@ -362,14 +362,14 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Testar que circuit breaker retorna 503 quando serviço destino está indisponível
     - _Requirements: 1.4, 1.5_
 
-- [ ] 9. Implementar ferramenta de migração de dados (`migration-tool`)
-  - [ ] 9.1 Criar módulo migration-tool com Spring Batch
+- [ ]* 9. Implementar ferramenta de migração de dados (`migration-tool`)
+  - [ ]* 9.1 Criar módulo migration-tool com Spring Batch
     - Criar `migration-tool/pom.xml` com dependências: spring-boot-starter-batch, spring-boot-starter-data-mongodb, spring-boot-starter-data-jpa, driver JDBC (H2/MySQL/PostgreSQL), nimbus-jose-jwt
     - Criar `MigrationToolApplication` com `@SpringBootApplication` e `@EnableBatchProcessing`
     - Criar `application.yml` com configuração de datasource SQL (origem) e MongoDB (destino)
     - _Requirements: 12.1_
 
-  - [ ] 9.2 Implementar jobs de migração por coleção (ordem de dependências)
+  - [ ]* 9.2 Implementar jobs de migração por coleção (ordem de dependências)
     - Implementar `SystemScopeMigrationJob`: lê `system_scope` SQL → escreve `system_scopes` MongoDB (upsert por `value`)
     - Implementar `ClientMigrationJob`: lê `client_details` + tabelas `@ElementCollection` → escreve `clients` MongoDB (upsert por `clientId`), desnormalizando arrays
     - Implementar `UserInfoMigrationJob`: lê `user_info` + `address` → escreve `user_info` MongoDB com `address` como subdocumento
@@ -381,7 +381,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Implementar `PermissionTicketMigrationJob`
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
-  - [ ] 9.3 Implementar relatório de migração e tratamento de erros
+  - [ ]* 9.3 Implementar relatório de migração e tratamento de erros
     - Criar `MigrationReportWriter` que grava `migration-report.json` com: contagem de documentos migrados por coleção, registros com erro (ID + causa), discrepâncias SQL vs MongoDB
     - Implementar `SkipPolicy` no Spring Batch: registros com dados inconsistentes são pulados e registrados no relatório; migração continua
     - Garantir idempotência: usar `replaceOne({ _id: <id> }, doc, { upsert: true })` em todos os writers
@@ -393,7 +393,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - **Validates: Requirements 12.5**
     - _Requirements: 12.5_
 
-  - [ ] 9.5 Checkpoint — migration-tool
+  - [ ]* 9.5 Checkpoint — migration-tool
     - Garantir que todos os testes da migration-tool passam. Verificar que execução múltipla produz mesmo resultado. Perguntar ao usuário se há dúvidas antes de continuar.
 
 - [ ] 10. Configurar observabilidade em todos os microserviços
