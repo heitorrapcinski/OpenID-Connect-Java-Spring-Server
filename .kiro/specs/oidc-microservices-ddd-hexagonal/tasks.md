@@ -137,8 +137,8 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Garantir que todos os testes do client-registry passam. Verificar que `POST /register` cria cliente e publica evento Kafka. Perguntar ao usuário se há dúvidas antes de continuar.
 
 
-- [-] 5. Implementar microserviço `authorization-server`
-  - [-] 5.1 Criar estrutura de pacotes hexagonal e domínio do authorization-server
+- [x] 5. Implementar microserviço `authorization-server`
+  - [x] 5.1 Criar estrutura de pacotes hexagonal e domínio do authorization-server
     - Criar `authorization-server/pom.xml` com dependências: spring-boot-starter-web, spring-boot-starter-data-mongodb, spring-boot-starter-security, spring-boot-starter-actuator, spring-kafka, nimbus-jose-jwt, bouncy-castle
     - Criar Aggregates: `AccessToken` (Root), `RefreshToken` (Root), `AuthorizationCode`, `DeviceCode`
     - Criar Value Objects imutáveis: `TokenValue` (JWT string), `ClientId`, `Subject`, `Scope`, `AuthenticationHolder`, `CodeValue`, `PKCEChallenge`, `DeviceCodeValue`, `UserCode`
@@ -167,7 +167,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - **Validates: Requirements 6.9**
     - _Requirements: 6.9_
 
-  - [ ] 5.5 Implementar TokenService com Nimbus JOSE+JWT
+  - [x] 5.5 Implementar TokenService com Nimbus JOSE+JWT
     - Criar `TokenIssuanceService` implementando `IssueTokenUseCase`: emitir JWT assinado com RS256 usando keystore configurado
     - Criar `TokenSerializer` e `TokenParser` usando Nimbus JOSE+JWT para serialização/parse de AccessToken e RefreshToken
     - Implementar validação de assinatura JWT; retornar erro tipado para JWT inválido (string vazia, JSON arbitrário, assinatura inválida, algoritmo `none`)
@@ -188,7 +188,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - **Validates: Requirements 11.5, 11.6**
     - _Requirements: 11.5, 11.6_
 
-  - [ ] 5.8 Implementar Application Services do authorization-server
+  - [x] 5.8 Implementar Application Services do authorization-server
     - Implementar `AuthorizationService` para fluxo Authorization Code com suporte a PKCE (RFC 7636)
     - Implementar `DeviceAuthorizationService` para Device Flow (RFC 8628)
     - Consultar `ClientQueryPort` para validar cliente em cada fluxo de token
@@ -196,7 +196,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Publicar Domain Events via `DomainEventPublisher` após cada operação
     - _Requirements: 2.5, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 10.5_
 
-  - [ ] 5.9 Implementar adapters de persistência MongoDB do authorization-server
+  - [x] 5.9 Implementar adapters de persistência MongoDB do authorization-server
     - Criar `MongoAccessTokenRepository`, `MongoRefreshTokenRepository`, `MongoAuthorizationCodeRepository`, `MongoDeviceCodeRepository`
     - Criar documentos com `@Document` e subdocumentos embutidos para `AuthenticationHolder`
     - Criar índices TTL em `expiration` (`expireAfterSeconds: 0`) para access_tokens, refresh_tokens, authorization_codes, device_codes
@@ -212,19 +212,19 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - **Validates: Requirements 5.1**
     - _Requirements: 5.1_
 
-  - [ ] 5.11 Implementar adapters REST para client-registry e scope-manager
+  - [x] 5.11 Implementar adapters REST para client-registry e scope-manager
     - Criar `ClientRegistryRestAdapter` implementando `ClientQueryPort` com `RestClient` + Resilience4j
     - Criar `ScopeManagerRestAdapter` implementando `ScopeQueryPort` com `RestClient` + Resilience4j
     - Configurar circuit breaker, retry 3x, timeout 2s, fallback com cache local (TTL 5 min) para escopos
     - Consumir evento Kafka `client.updated` para invalidar cache local de clientes
     - _Requirements: 1.3, 1.5, 10.3_
 
-  - [ ] 5.12 Implementar adapter Kafka do authorization-server
+  - [x] 5.12 Implementar adapter Kafka do authorization-server
     - Criar `KafkaDomainEventPublisher` publicando eventos nos tópicos: `auth.token.issued`, `auth.token.revoked`, `auth.refresh.issued`, `auth.refresh.revoked`
     - Configurar Dead Letter Topic para eventos com falha após 3 tentativas
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.10, 4.11_
 
-  - [ ] 5.13 Implementar REST adapter do authorization-server
+  - [x] 5.13 Implementar REST adapter do authorization-server
     - Criar `AuthorizationEndpoint` (`GET/POST /authorize`), `TokenEndpoint` (`POST /token`), `RevocationEndpoint` (`POST /revoke`), `IntrospectionEndpoint` (`POST /introspect`), `DeviceAuthorizationEndpoint` (`POST /device_authorization`)
     - Criar `GlobalExceptionHandler` mapeando exceções de domínio para respostas OAuth2 (RFC 6749)
     - Criar `SecurityConfig` com autenticação de cliente (Basic Auth, client_secret_post, private_key_jwt) nos endpoints `/token`, `/introspect`, `/revoke`
@@ -232,7 +232,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Criar classe `AuthorizationServerApplication` com `@SpringBootApplication`
     - _Requirements: 1.4, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10_
 
-  - [ ] 5.14 Checkpoint — authorization-server
+  - [x] 5.14 Checkpoint — authorization-server
     - Garantir que todos os testes do authorization-server passam. Verificar fluxo authorization_code end-to-end com mocks. Perguntar ao usuário se há dúvidas antes de continuar.
 
 
