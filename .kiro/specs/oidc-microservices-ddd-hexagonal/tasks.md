@@ -396,16 +396,16 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
   - [ ]* 9.5 Checkpoint — migration-tool
     - Garantir que todos os testes da migration-tool passam. Verificar que execução múltipla produz mesmo resultado. Perguntar ao usuário se há dúvidas antes de continuar.
 
-- [ ] 10. Configurar observabilidade em todos os microserviços
-  - [ ] 10.1 Adicionar Actuator, Micrometer e OpenTelemetry a cada microserviço
+- [-] 10. Configurar observabilidade em todos os microserviços
+  - [-] 10.1 Adicionar Actuator, Micrometer e OpenTelemetry a cada microserviço
     - Adicionar dependências ao `pom.xml` de cada microserviço: `spring-boot-starter-actuator`, `micrometer-registry-prometheus`, `micrometer-tracing-bridge-otel`, `opentelemetry-exporter-otlp`
     - Configurar `application.yml` de cada serviço: expor `/actuator/health`, `/actuator/metrics`, `/actuator/info`; incluir health indicators para MongoDB e Kafka
     - Configurar Logback com `logstash-logback-encoder` para logs JSON com campos: `timestamp`, `level`, `service`, `traceId`, `spanId`, `message`
     - Configurar propagação de `traceId` via headers HTTP (W3C Trace Context) em todas as chamadas REST entre serviços
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
 
-- [ ] 11. Criar Docker Compose para orquestração local
-  - [ ] 11.1 Criar `docker-compose.yml` na raiz do projeto
+- [x] 11. Criar Docker Compose para orquestração local
+  - [x] 11.1 Criar `docker-compose.yml` na raiz do projeto
     - Definir serviços: `mongodb-auth`, `mongodb-client`, `mongodb-oidc`, `mongodb-uma`, `mongodb-scope` (5 instâncias MongoDB independentes, portas 27017-27021)
     - Definir serviço `kafka` com Zookeeper (ou KRaft) e criação automática dos tópicos: `auth.token.issued`, `auth.token.revoked`, `auth.refresh.issued`, `auth.refresh.revoked`, `client.registered`, `client.updated`, `client.deleted`, `uma.resource.registered`, `uma.permission.created` e respectivos `.DLT`
     - Definir serviços para cada microserviço com `build: ./{service-name}`, variáveis de ambiente apontando para os containers MongoDB e Kafka, e `depends_on` corretos
@@ -413,7 +413,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Definir serviço `migration-tool` com `restart: no` e `depends_on` nos containers MongoDB
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 11.2 Criar `Dockerfile` para cada microserviço
+  - [x] 11.2 Criar `Dockerfile` para cada microserviço
     - Criar `Dockerfile` multi-stage em cada módulo: stage `build` com Maven 3.9 + Java 21; stage `runtime` com `eclipse-temurin:21-jre-alpine`
     - Copiar apenas o JAR final no stage runtime; expor a porta correta de cada serviço
     - _Requirements: 1.1_

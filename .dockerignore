@@ -1,0 +1,6 @@
+.git
+.kiro
+.legacy
+**/target
+**/*.md
+**/node_modules

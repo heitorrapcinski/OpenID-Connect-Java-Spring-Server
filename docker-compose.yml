@@ -1,0 +1,381 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────
+# Networks
+# ─────────────────────────────────────────────
+networks:
+  oidc-net:
+    driver: bridge
+
+# ─────────────────────────────────────────────
+# Volumes
+# ─────────────────────────────────────────────
+volumes:
+  mongodb-auth-data:
+  mongodb-client-data:
+  mongodb-oidc-data:
+  mongodb-uma-data:
+  mongodb-scope-data:
+
+# ─────────────────────────────────────────────
+# Services
+# ─────────────────────────────────────────────
+services:
+
+  # ── MongoDB instances (one per bounded context) ──────────────────────────
+
+  mongodb-auth:
+    image: mongo:7.0
+    container_name: mongodb-auth
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: auth_db
+    volumes:
+      - mongodb-auth-data:/data/db
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb-client:
+    image: mongo:7.0
+    container_name: mongodb-client
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: client_db
+    volumes:
+      - mongodb-client-data:/data/db
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb-oidc:
+    image: mongo:7.0
+    container_name: mongodb-oidc
+    restart: unless-stopped
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_DATABASE: oidc_db
+    volumes:
+      - mongodb-oidc-data:/data/db
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb-uma:
+    image: mongo:7.0
+    container_name: mongodb-uma
+    restart: unless-stopped
+    ports:
+      - "27020:27017"
+    environment:
+      MONGO_INITDB_DATABASE: uma_db
+    volumes:
+      - mongodb-uma-data:/data/db
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb-scope:
+    image: mongo:7.0
+    container_name: mongodb-scope
+    restart: unless-stopped
+    ports:
+      - "27021:27017"
+    environment:
+      MONGO_INITDB_DATABASE: scope_db
+    volumes:
+      - mongodb-scope-data:/data/db
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Kafka (KRaft mode — no Zookeeper) ────────────────────────────────────
+
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # Creates all required topics (including DLTs) after Kafka is healthy
+  kafka-init:
+    image: apache/kafka:3.7.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - oidc-net
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        KAFKA=/opt/kafka/bin/kafka-topics.sh
+        BS=kafka:9092
+        for TOPIC in \
+          auth.token.issued \
+          auth.token.revoked \
+          auth.refresh.issued \
+          auth.refresh.revoked \
+          client.registered \
+          client.updated \
+          client.deleted \
+          uma.resource.registered \
+          uma.permission.created; do
+          $$KAFKA --bootstrap-server $$BS --create --if-not-exists --topic $$TOPIC --partitions 3 --replication-factor 1
+          $$KAFKA --bootstrap-server $$BS --create --if-not-exists --topic $${TOPIC}.DLT --partitions 1 --replication-factor 1
+        done
+        echo "All topics created."
+    restart: "no"
+
+  # ── Microservices ─────────────────────────────────────────────────────────
+
+  scope-manager:
+    build:
+      context: ./scope-manager
+      dockerfile: Dockerfile
+    container_name: scope-manager
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb-scope:27017/scope_db
+      SERVER_PORT: "8084"
+    depends_on:
+      mongodb-scope:
+        condition: service_healthy
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8084/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  client-registry:
+    build:
+      context: ./client-registry
+      dockerfile: Dockerfile
+    container_name: client-registry
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb-client:27017/client_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8081"
+      SCOPE_MANAGER_URL: http://scope-manager:8084
+    depends_on:
+      mongodb-client:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      scope-manager:
+        condition: service_healthy
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  authorization-server:
+    build:
+      context: ./authorization-server
+      dockerfile: Dockerfile
+    container_name: authorization-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb-auth:27017/auth_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8080"
+      SCOPE_MANAGER_URL: http://scope-manager:8084
+      CLIENT_REGISTRY_URL: http://client-registry:8081
+    depends_on:
+      mongodb-auth:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      scope-manager:
+        condition: service_healthy
+      client-registry:
+        condition: service_healthy
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  oidc-provider:
+    build:
+      context: ./oidc-provider
+      dockerfile: Dockerfile
+    container_name: oidc-provider
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb-oidc:27017/oidc_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8082"
+      AUTHORIZATION_SERVER_URL: http://authorization-server:8080
+    depends_on:
+      mongodb-oidc:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      authorization-server:
+        condition: service_healthy
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8082/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  uma-server:
+    build:
+      context: ./uma-server
+      dockerfile: Dockerfile
+    container_name: uma-server
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb-uma:27017/uma_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8083"
+    depends_on:
+      mongodb-uma:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      authorization-server:
+        condition: service_healthy
+    networks:
+      - oidc-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8083/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+      - "8090:8090"
+    environment:
+      SERVER_PORT: "8090"
+      AUTHORIZATION_SERVER_URL: http://authorization-server:8080
+      CLIENT_REGISTRY_URL: http://client-registry:8081
+      OIDC_PROVIDER_URL: http://oidc-provider:8082
+      UMA_SERVER_URL: http://uma-server:8083
+      SCOPE_MANAGER_URL: http://scope-manager:8084
+    depends_on:
+      authorization-server:
+        condition: service_healthy
+      client-registry:
+        condition: service_healthy
+      oidc-provider:
+        condition: service_healthy
+      uma-server:
+        condition: service_healthy
+      scope-manager:
+        condition: service_healthy
+    networks:
+      - oidc-net
+
+  # ── Migration Tool (run-once) ─────────────────────────────────────────────
+
+  migration-tool:
+    build:
+      context: ./migration-tool
+      dockerfile: Dockerfile
+    container_name: migration-tool
+    restart: "no"
+    environment:
+      MONGODB_AUTH_URI: mongodb://mongodb-auth:27017/auth_db
+      MONGODB_CLIENT_URI: mongodb://mongodb-client:27017/client_db
+      MONGODB_OIDC_URI: mongodb://mongodb-oidc:27017/oidc_db
+      MONGODB_UMA_URI: mongodb://mongodb-uma:27017/uma_db
+      MONGODB_SCOPE_URI: mongodb://mongodb-scope:27017/scope_db
+    depends_on:
+      mongodb-auth:
+        condition: service_healthy
+      mongodb-client:
+        condition: service_healthy
+      mongodb-oidc:
+        condition: service_healthy
+      mongodb-uma:
+        condition: service_healthy
+      mongodb-scope:
+        condition: service_healthy
+    networks:
+      - oidc-net
+    profiles:
+      - migration
