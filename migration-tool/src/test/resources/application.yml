@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
+  data:
+    mongodb:
+      auth-uri: mongodb://localhost:27017/auth_db
+      client-uri: mongodb://localhost:27018/client_db
+      oidc-uri: mongodb://localhost:27019/oidc_db
+      uma-uri: mongodb://localhost:27020/uma_db
+      scope-uri: mongodb://localhost:27021/scope_db
+
+migration:
+  report:
+    output-path: target/test-migration-report.json
+  chunk-size: 10

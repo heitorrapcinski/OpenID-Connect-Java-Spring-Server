@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: migration-tool
+
+  # SQL source datasource (legacy relational DB)
+  datasource:
+    url: ${SQL_DATASOURCE_URL:jdbc:h2:mem:legacydb;DB_CLOSE_DELAY=-1;MODE=MySQL}
+    username: ${SQL_DATASOURCE_USERNAME:sa}
+    password: ${SQL_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SQL_DATASOURCE_DRIVER:org.h2.Driver}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false
+
+  # MongoDB destination (multiple URIs for each microservice DB)
+  data:
+    mongodb:
+      auth-uri: ${MONGODB_AUTH_URI:mongodb://localhost:27017/auth_db}
+      client-uri: ${MONGODB_CLIENT_URI:mongodb://localhost:27018/client_db}
+      oidc-uri: ${MONGODB_OIDC_URI:mongodb://localhost:27019/oidc_db}
+      uma-uri: ${MONGODB_UMA_URI:mongodb://localhost:27020/uma_db}
+      scope-uri: ${MONGODB_SCOPE_URI:mongodb://localhost:27021/scope_db}
+
+  # Spring Batch — use in-memory H2 for job metadata
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false  # jobs are triggered programmatically
+
+migration:
+  report:
+    output-path: ${MIGRATION_REPORT_PATH:migration-report.json}
+  chunk-size: ${MIGRATION_CHUNK_SIZE:100}
+
+logging:
+  level:
+    org.mitre.migration: INFO
+    org.springframework.batch: INFO
