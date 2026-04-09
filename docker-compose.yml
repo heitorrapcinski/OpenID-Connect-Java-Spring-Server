@@ -350,6 +350,34 @@ services:
     networks:
       - oidc-net
 
+  # ── MongoDB Seed (run-once, idempotent) ──────────────────────────────────
+
+  mongo-seed:
+    image: mongo:7.0
+    container_name: mongo-seed
+    restart: "no"
+    depends_on:
+      mongodb-scope:
+        condition: service_healthy
+      mongodb-client:
+        condition: service_healthy
+      mongodb-oidc:
+        condition: service_healthy
+    volumes:
+      - ./mongo-seed:/seed:ro
+    networks:
+      - oidc-net
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "→ Seeding scope_db..."
+        mongosh --host mongodb-scope:27017 --quiet /seed/01-seed-scopes.js
+        echo "→ Seeding client_db..."
+        mongosh --host mongodb-client:27017 --quiet /seed/02-seed-clients.js
+        echo "→ Seeding oidc_db..."
+        mongosh --host mongodb-oidc:27017 --quiet /seed/03-seed-users.js
+        echo "=== Seed concluído ==="
+
   # ── Migration Tool (run-once) ─────────────────────────────────────────────
 
   migration-tool:
