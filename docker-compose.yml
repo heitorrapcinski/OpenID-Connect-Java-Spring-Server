@@ -178,8 +178,8 @@ services:
 
   scope-manager:
     build:
-      context: ./scope-manager
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: scope-manager/Dockerfile
     container_name: scope-manager
     restart: unless-stopped
     ports:
@@ -200,8 +200,8 @@ services:
 
   client-registry:
     build:
-      context: ./client-registry
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: client-registry/Dockerfile
     container_name: client-registry
     restart: unless-stopped
     ports:
@@ -230,8 +230,8 @@ services:
 
   authorization-server:
     build:
-      context: ./authorization-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: authorization-server/Dockerfile
     container_name: authorization-server
     restart: unless-stopped
     ports:
@@ -263,8 +263,8 @@ services:
 
   oidc-provider:
     build:
-      context: ./oidc-provider
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: oidc-provider/Dockerfile
     container_name: oidc-provider
     restart: unless-stopped
     ports:
@@ -293,8 +293,8 @@ services:
 
   uma-server:
     build:
-      context: ./uma-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: uma-server/Dockerfile
     container_name: uma-server
     restart: unless-stopped
     ports:
@@ -322,8 +322,8 @@ services:
 
   api-gateway:
     build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api-gateway/Dockerfile
     container_name: api-gateway
     restart: unless-stopped
     ports:
@@ -354,8 +354,8 @@ services:
 
   migration-tool:
     build:
-      context: ./migration-tool
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: migration-tool/Dockerfile
     container_name: migration-tool
     restart: "no"
     environment:
