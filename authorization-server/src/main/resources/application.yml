@@ -22,7 +22,31 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: always
+  health:
+    mongo:
+      enabled: true
+    kafka:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    build:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: @project.version@
+
+logging:
+  config: classpath:logback-spring.xml

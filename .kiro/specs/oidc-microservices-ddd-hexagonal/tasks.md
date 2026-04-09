@@ -396,8 +396,8 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
   - [ ]* 9.5 Checkpoint — migration-tool
     - Garantir que todos os testes da migration-tool passam. Verificar que execução múltipla produz mesmo resultado. Perguntar ao usuário se há dúvidas antes de continuar.
 
-- [-] 10. Configurar observabilidade em todos os microserviços
-  - [-] 10.1 Adicionar Actuator, Micrometer e OpenTelemetry a cada microserviço
+- [x] 10. Configurar observabilidade em todos os microserviços
+  - [x] 10.1 Adicionar Actuator, Micrometer e OpenTelemetry a cada microserviço
     - Adicionar dependências ao `pom.xml` de cada microserviço: `spring-boot-starter-actuator`, `micrometer-registry-prometheus`, `micrometer-tracing-bridge-otel`, `opentelemetry-exporter-otlp`
     - Configurar `application.yml` de cada serviço: expor `/actuator/health`, `/actuator/metrics`, `/actuator/info`; incluir health indicators para MongoDB e Kafka
     - Configurar Logback com `logstash-logback-encoder` para logs JSON com campos: `timestamp`, `level`, `service`, `traceId`, `spanId`, `message`
