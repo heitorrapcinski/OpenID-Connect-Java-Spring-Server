@@ -185,7 +185,7 @@ services:
     ports:
       - "8084:8084"
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb-scope:27017/scope_db
+      MONGODB_URI: mongodb://mongodb-scope:27017/scope_db
       SERVER_PORT: "8084"
     depends_on:
       mongodb-scope:
@@ -207,8 +207,8 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb-client:27017/client_db
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MONGODB_URI: mongodb://mongodb-client:27017/client_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SERVER_PORT: "8081"
       SCOPE_MANAGER_URL: http://scope-manager:8084
     depends_on:
@@ -237,8 +237,8 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb-auth:27017/auth_db
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MONGODB_URI: mongodb://mongodb-auth:27017/auth_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SERVER_PORT: "8080"
       SCOPE_MANAGER_URL: http://scope-manager:8084
       CLIENT_REGISTRY_URL: http://client-registry:8081
@@ -270,8 +270,8 @@ services:
     ports:
       - "8082:8082"
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb-oidc:27017/oidc_db
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MONGODB_URI: mongodb://mongodb-oidc:27017/oidc_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SERVER_PORT: "8082"
       AUTHORIZATION_SERVER_URL: http://authorization-server:8080
     depends_on:
@@ -300,8 +300,8 @@ services:
     ports:
       - "8083:8083"
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb-uma:27017/uma_db
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MONGODB_URI: mongodb://mongodb-uma:27017/uma_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SERVER_PORT: "8083"
     depends_on:
       mongodb-uma:

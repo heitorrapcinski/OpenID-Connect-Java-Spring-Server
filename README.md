@@ -1023,8 +1023,8 @@ Esta seção lista as variáveis de ambiente de cada microsserviço com seus val
 
 | Variável | Descrição | Padrão | Obrigatória |
 |---|---|---|---|
-| `SPRING_DATA_MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-auth:27017/auth_db` | Sim |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | Endereço do broker Kafka | `kafka:9092` | Sim |
+| `MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-auth:27017/auth_db` | Sim |
+| `KAFKA_BOOTSTRAP_SERVERS` | Endereço do broker Kafka | `kafka:9092` | Sim |
 | `SERVER_PORT` | Porta HTTP do serviço | `8080` | Sim |
 | `SCOPE_MANAGER_URL` | URL base do scope-manager | `http://scope-manager:8084` | Sim |
 | `CLIENT_REGISTRY_URL` | URL base do client-registry | `http://client-registry:8081` | Sim |
@@ -1033,8 +1033,8 @@ Esta seção lista as variáveis de ambiente de cada microsserviço com seus val
 
 | Variável | Descrição | Padrão | Obrigatória |
 |---|---|---|---|
-| `SPRING_DATA_MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-client:27017/client_db` | Sim |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | Endereço do broker Kafka | `kafka:9092` | Sim |
+| `MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-client:27017/client_db` | Sim |
+| `KAFKA_BOOTSTRAP_SERVERS` | Endereço do broker Kafka | `kafka:9092` | Sim |
 | `SERVER_PORT` | Porta HTTP do serviço | `8081` | Sim |
 | `SCOPE_MANAGER_URL` | URL base do scope-manager | `http://scope-manager:8084` | Sim |
 
@@ -1042,8 +1042,8 @@ Esta seção lista as variáveis de ambiente de cada microsserviço com seus val
 
 | Variável | Descrição | Padrão | Obrigatória |
 |---|---|---|---|
-| `SPRING_DATA_MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-oidc:27017/oidc_db` | Sim |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | Endereço do broker Kafka | `kafka:9092` | Sim |
+| `MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-oidc:27017/oidc_db` | Sim |
+| `KAFKA_BOOTSTRAP_SERVERS` | Endereço do broker Kafka | `kafka:9092` | Sim |
 | `SERVER_PORT` | Porta HTTP do serviço | `8082` | Sim |
 | `AUTHORIZATION_SERVER_URL` | URL do authorization-server | `http://authorization-server:8080` | Sim |
 
@@ -1051,15 +1051,15 @@ Esta seção lista as variáveis de ambiente de cada microsserviço com seus val
 
 | Variável | Descrição | Padrão | Obrigatória |
 |---|---|---|---|
-| `SPRING_DATA_MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-uma:27017/uma_db` | Sim |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | Endereço do broker Kafka | `kafka:9092` | Sim |
+| `MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-uma:27017/uma_db` | Sim |
+| `KAFKA_BOOTSTRAP_SERVERS` | Endereço do broker Kafka | `kafka:9092` | Sim |
 | `SERVER_PORT` | Porta HTTP do serviço | `8083` | Sim |
 
 ### 7.5 Scope Manager
 
 | Variável | Descrição | Padrão | Obrigatória |
 |---|---|---|---|
-| `SPRING_DATA_MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-scope:27017/scope_db` | Sim |
+| `MONGODB_URI` | URI de conexão MongoDB | `mongodb://mongodb-scope:27017/scope_db` | Sim |
 | `SERVER_PORT` | Porta HTTP do serviço | `8084` | Sim |
 
 ### 7.6 API Gateway
