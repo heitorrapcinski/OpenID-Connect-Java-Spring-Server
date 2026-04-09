@@ -14,15 +14,15 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
   - Arquivos a mover: todos os diretórios e arquivos na raiz (openid-connect-server, openid-connect-client, openid-connect-common, etc.), exceto `.kiro/`
   - _Requirements: 1.1_
 
-- [ ] 2. Criar estrutura Maven multi-módulo raiz
+- [x] 2. Criar estrutura Maven multi-módulo raiz
   - Criar `pom.xml` raiz com `<packaging>pom</packaging>` e módulos: `scope-manager`, `client-registry`, `authorization-server`, `oidc-provider`, `uma-server`, `api-gateway`, `migration-tool`
   - Definir `<dependencyManagement>` com Spring Boot 3.3.0 BOM, Spring Cloud BOM, Nimbus JOSE+JWT 9.37.3, jqwik 1.8.4, Testcontainers BOM
   - Definir propriedades globais: `java.version=21`, `maven.compiler.source=21`, `maven.compiler.target=21`
   - _Requirements: 1.1, 2.1_
 
 
-- [ ] 3. Implementar microserviço `scope-manager` (sem dependências externas)
-  - [ ] 3.1 Criar estrutura de pacotes hexagonal e domínio do scope-manager
+- [x] 3. Implementar microserviço `scope-manager` (sem dependências externas)
+  - [x] 3.1 Criar estrutura de pacotes hexagonal e domínio do scope-manager
     - Criar `scope-manager/pom.xml` com dependências: spring-boot-starter-web, spring-boot-starter-data-mongodb, spring-boot-starter-security, spring-boot-starter-actuator, nimbus-jose-jwt
     - Criar `SystemScope` Aggregate Root com Value Object `ScopeValue` (imutável, validação de não-nulo/não-vazio)
     - Criar exceções de domínio: `ScopeAlreadyExistsException`, `ScopeNotFoundException`
@@ -35,12 +35,12 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Testar que operações inválidas lançam exceções de domínio tipadas
     - _Requirements: 3.12_
 
-  - [ ] 3.3 Implementar Application Services do scope-manager
+  - [x] 3.3 Implementar Application Services do scope-manager
     - Implementar `ScopeApplicationService` implementando todos os Use Case ports
     - Injetar `SystemScopeRepository` via construtor (sem acoplamento a MongoDB)
     - _Requirements: 2.5, 10.1, 10.2_
 
-  - [ ] 3.4 Implementar adapter de persistência MongoDB do scope-manager
+  - [x] 3.4 Implementar adapter de persistência MongoDB do scope-manager
     - Criar `MongoSystemScopeRepository` implementando `SystemScopeRepository`
     - Criar documento `SystemScopeDocument` com `@Document("system_scopes")`, campo `_id` = `value`
     - Criar índice único em `value` via `@Indexed(unique=true)`
@@ -53,7 +53,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Testar operações CRUD e idempotência de upsert
     - _Requirements: 5.1, 5.5_
 
-  - [ ] 3.6 Implementar REST adapter do scope-manager
+  - [x] 3.6 Implementar REST adapter do scope-manager
     - Criar `ScopeController` com endpoints: `GET /scopes`, `GET /scopes/defaults`, `POST /scopes`, `PUT /scopes/{value}`, `DELETE /scopes/{value}`
     - Criar `GlobalExceptionHandler` (`@ControllerAdvice`) mapeando exceções de domínio para HTTP
     - Criar `SecurityConfig` protegendo `POST/PUT/DELETE /scopes` com `ROLE_ADMIN`; `GET /scopes*` público
@@ -61,10 +61,10 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Criar classe `ScopeManagerApplication` com `@SpringBootApplication`
     - _Requirements: 1.4, 2.2, 10.1, 10.2, 10.3, 10.4_
 
-  - [ ] 3.7 Checkpoint — scope-manager
+  - [x] 3.7 Checkpoint — scope-manager
     - Garantir que todos os testes do scope-manager passam. Verificar que `GET /scopes` e `GET /scopes/defaults` retornam respostas corretas. Perguntar ao usuário se há dúvidas antes de continuar.
 
-- [ ] 4. Implementar microserviço `client-registry`
+- [-] 4. Implementar microserviço `client-registry`
   - [ ] 4.1 Criar estrutura de pacotes hexagonal e domínio do client-registry
     - Criar `client-registry/pom.xml` com dependências: spring-boot-starter-web, spring-boot-starter-data-mongodb, spring-boot-starter-security, spring-boot-starter-actuator, spring-kafka, nimbus-jose-jwt
     - Criar `Client` Aggregate Root com Value Objects: `ClientId`, `ClientSecret`, `RedirectUri`, `GrantType`, `ResponseType`, `JwsAlgorithm`, `JweAlgorithm`, `SectorIdentifierUri`
