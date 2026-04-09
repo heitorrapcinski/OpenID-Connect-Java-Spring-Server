@@ -236,8 +236,8 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Garantir que todos os testes do authorization-server passam. Verificar fluxo authorization_code end-to-end com mocks. Perguntar ao usuário se há dúvidas antes de continuar.
 
 
-- [ ] 6. Implementar microserviço `oidc-provider`
-  - [ ] 6.1 Criar estrutura de pacotes hexagonal e domínio do oidc-provider
+- [x] 6. Implementar microserviço `oidc-provider`
+  - [x] 6.1 Criar estrutura de pacotes hexagonal e domínio do oidc-provider
     - Criar `oidc-provider/pom.xml` com dependências: spring-boot-starter-web, spring-boot-starter-data-mongodb, spring-boot-starter-security, spring-boot-starter-actuator, spring-kafka, nimbus-jose-jwt, bouncy-castle
     - Criar `UserInfo` Aggregate Root com Value Objects: `Subject`, `Address` (embutido: formatted, streetAddress, locality, region, postalCode, country)
     - Criar `PairwiseIdentifier` Aggregate com Value Objects: `UserSub`, `SectorIdentifier`, `PairwiseValue`; invariante: par `(userSub, sectorIdentifier)` é único
@@ -258,7 +258,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - **Validates: Requirements 8.5**
     - _Requirements: 8.5_
 
-  - [ ] 6.4 Implementar Application Services do oidc-provider
+  - [x] 6.4 Implementar Application Services do oidc-provider
     - Implementar `UserInfoService` implementando `GetUserInfoUseCase`: validar access token via `TokenIntrospectionPort`, retornar UserInfo filtrado pelos escopos do token
     - Implementar `DiscoveryService` implementando `GetDiscoveryDocumentUseCase`: montar documento de discovery conforme OpenID Connect Discovery 1.0
     - Implementar `JwksService` implementando `GetJwksUseCase`: expor chaves públicas JWK
@@ -266,24 +266,24 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Consumir evento Kafka `client.registered` para setup de pairwise quando `subject_type=pairwise`
     - _Requirements: 2.5, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9_
 
-  - [ ] 6.5 Implementar adapters de persistência MongoDB do oidc-provider
+  - [x] 6.5 Implementar adapters de persistência MongoDB do oidc-provider
     - Criar `MongoUserInfoRepository`, `MongoPairwiseIdentifierRepository`, `MongoApprovedSiteRepository`, `MongoWhitelistedSiteRepository`, `MongoBlacklistedSiteRepository`
     - Criar documentos com `@Document` e subdocumentos embutidos para `Address`
     - Criar índices: `user_info` — único em `preferredUsername`, em `email`; `pairwise_identifiers` — único composto em `(userSub, sectorIdentifier)`; `approved_sites` — composto em `(userId, clientId)`; `whitelisted_sites` — em `clientId`
     - _Requirements: 5.1, 5.2, 5.3, 5.5_
 
-  - [ ] 6.6 Implementar adapter REST para authorization-server (TokenIntrospectionPort)
+  - [x] 6.6 Implementar adapter REST para authorization-server (TokenIntrospectionPort)
     - Criar `AuthorizationServerRestAdapter` implementando `TokenIntrospectionPort` com `RestClient` + Resilience4j
     - Usar mTLS ou service account token para autenticação da chamada interna
     - _Requirements: 1.3, 1.5_
 
-  - [ ] 6.7 Implementar consumer Kafka do oidc-provider
+  - [x] 6.7 Implementar consumer Kafka do oidc-provider
     - Criar consumer para tópico `client.registered` para processar setup de pairwise
     - Criar consumer para tópico `auth.token.issued` para auditoria
     - Configurar Dead Letter Topic para mensagens com falha
     - _Requirements: 4.10, 4.11_
 
-  - [ ] 6.8 Implementar REST adapter do oidc-provider
+  - [x] 6.8 Implementar REST adapter do oidc-provider
     - Criar `UserInfoEndpoint` (`GET/POST /userinfo`), `DiscoveryEndpoint` (`GET /.well-known/openid-configuration`), `JwksEndpoint` (`GET /jwks`), `EndSessionEndpoint` (`GET/POST /end_session`)
     - Suportar resposta UserInfo como JWT assinado (`userinfo_signed_response_alg`) e criptografado (`userinfo_encrypted_response_alg`) usando Nimbus JOSE+JWT
     - Criar `SecurityConfig`: `/userinfo` exige Bearer token com escopo `openid`; demais endpoints públicos
@@ -291,7 +291,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Criar classe `OidcProviderApplication` com `@SpringBootApplication`
     - _Requirements: 1.4, 8.1, 8.2, 8.3, 8.4, 8.6, 8.7, 8.8, 8.9_
 
-  - [ ] 6.9 Checkpoint — oidc-provider
+  - [x] 6.9 Checkpoint — oidc-provider
     - Garantir que todos os testes do oidc-provider passam. Verificar que `GET /.well-known/openid-configuration` retorna documento de discovery correto. Perguntar ao usuário se há dúvidas antes de continuar.
 
 - [ ] 7. Implementar microserviço `uma-server`

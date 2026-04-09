@@ -1,0 +1,51 @@
+server:
+  port: 8082
+  issuer-url: ${SERVER_ISSUER_URL:http://localhost:8082}
+
+spring:
+  application:
+    name: oidc-provider
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/oidc_db}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: oidc-provider
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    properties:
+      spring.json.trusted.packages: "*"
+
+authorization:
+  server:
+    url: ${AUTHORIZATION_SERVER_URL:http://localhost:8080}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      authorization-server:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        wait-duration-in-open-state: 30s
+  retry:
+    instances:
+      authorization-server:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+  timelimiter:
+    instances:
+      authorization-server:
+        timeout-duration: 2s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
