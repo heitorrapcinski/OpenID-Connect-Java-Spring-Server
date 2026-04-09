@@ -137,8 +137,8 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Garantir que todos os testes do client-registry passam. Verificar que `POST /register` cria cliente e publica evento Kafka. Perguntar ao usuário se há dúvidas antes de continuar.
 
 
-- [ ] 5. Implementar microserviço `authorization-server`
-  - [ ] 5.1 Criar estrutura de pacotes hexagonal e domínio do authorization-server
+- [-] 5. Implementar microserviço `authorization-server`
+  - [-] 5.1 Criar estrutura de pacotes hexagonal e domínio do authorization-server
     - Criar `authorization-server/pom.xml` com dependências: spring-boot-starter-web, spring-boot-starter-data-mongodb, spring-boot-starter-security, spring-boot-starter-actuator, spring-kafka, nimbus-jose-jwt, bouncy-castle
     - Criar Aggregates: `AccessToken` (Root), `RefreshToken` (Root), `AuthorizationCode`, `DeviceCode`
     - Criar Value Objects imutáveis: `TokenValue` (JWT string), `ClientId`, `Subject`, `Scope`, `AuthenticationHolder`, `CodeValue`, `PKCEChallenge`, `DeviceCodeValue`, `UserCode`
