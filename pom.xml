@@ -82,22 +82,11 @@
                 <scope>test</scope>
             </dependency>
 
-            <!-- Observabilidade: Micrometer Prometheus -->
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-registry-prometheus</artifactId>
-            </dependency>
-
-            <!-- Observabilidade: Micrometer Tracing Bridge OTel -->
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-tracing-bridge-otel</artifactId>
-            </dependency>
-
-            <!-- Observabilidade: OpenTelemetry OTLP Exporter -->
+            <!-- Observabilidade: OpenTelemetry OTLP Exporter (versão gerenciada pelo Spring Boot BOM via opentelemetry.version) -->
             <dependency>
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-exporter-otlp</artifactId>
+                <version>1.37.0</version>
             </dependency>
 
             <!-- Logs JSON estruturados -->

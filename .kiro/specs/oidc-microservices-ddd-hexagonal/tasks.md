@@ -418,7 +418,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Copiar apenas o JAR final no stage runtime; expor a porta correta de cada serviço
     - _Requirements: 1.1_
 
-- [ ] 12. Checkpoint final — integração completa
+- [x] 12. Checkpoint final — integração completa
   - Garantir que todos os testes unitários, de propriedade e de integração passam em todos os módulos (`mvn test` no módulo raiz)
   - Verificar que `docker-compose up` sobe todos os serviços sem erros
   - Verificar que `GET /.well-known/openid-configuration` via API Gateway retorna discovery document correto
