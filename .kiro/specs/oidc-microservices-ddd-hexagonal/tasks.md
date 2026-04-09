@@ -64,8 +64,8 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
   - [x] 3.7 Checkpoint — scope-manager
     - Garantir que todos os testes do scope-manager passam. Verificar que `GET /scopes` e `GET /scopes/defaults` retornam respostas corretas. Perguntar ao usuário se há dúvidas antes de continuar.
 
-- [-] 4. Implementar microserviço `client-registry`
-  - [ ] 4.1 Criar estrutura de pacotes hexagonal e domínio do client-registry
+- [x] 4. Implementar microserviço `client-registry`
+  - [x] 4.1 Criar estrutura de pacotes hexagonal e domínio do client-registry
     - Criar `client-registry/pom.xml` com dependências: spring-boot-starter-web, spring-boot-starter-data-mongodb, spring-boot-starter-security, spring-boot-starter-actuator, spring-kafka, nimbus-jose-jwt
     - Criar `Client` Aggregate Root com Value Objects: `ClientId`, `ClientSecret`, `RedirectUri`, `GrantType`, `ResponseType`, `JwsAlgorithm`, `JweAlgorithm`, `SectorIdentifierUri`
     - Implementar invariantes: `grant_types` e `response_types` compatíveis; `redirect_uris` HTTPS para clientes web; `idTokenValiditySeconds` não nulo (default 600)
@@ -87,13 +87,13 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - **Validates: Requirements 3.12, 7.5**
     - _Requirements: 3.12, 7.5_
 
-  - [ ] 4.4 Implementar Application Services do client-registry
+  - [x] 4.4 Implementar Application Services do client-registry
     - Implementar `ClientRegistrationService` implementando todos os Use Case ports
     - Ao registrar cliente sem escopos explícitos, invocar `ScopeQueryPort.getDefaultScopes()` e atribuir ao cliente
     - Publicar Domain Events via `DomainEventPublisher` após cada operação bem-sucedida
     - _Requirements: 2.5, 4.5, 4.6, 4.7, 7.1, 7.2, 7.3, 7.4, 10.4_
 
-  - [ ] 4.5 Implementar adapter de persistência MongoDB do client-registry
+  - [x] 4.5 Implementar adapter de persistência MongoDB do client-registry
     - Criar `MongoClientRepository` implementando `ClientRepository`
     - Criar documento `ClientDocument` com `@Document("clients")`, `_id` = `clientId`
     - Criar índice único em `clientId` via `@Indexed(unique=true)`
@@ -112,20 +112,20 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - **Validates: Requirements 5.7**
     - _Requirements: 5.7_
 
-  - [ ] 4.8 Implementar adapter REST para scope-manager (ScopeQueryPort)
+  - [x] 4.8 Implementar adapter REST para scope-manager (ScopeQueryPort)
     - Criar `ScopeManagerRestAdapter` implementando `ScopeQueryPort` usando `RestClient` (Spring 6)
     - Configurar circuit breaker Resilience4j com threshold 50%, retry 3x com backoff exponencial, timeout 2s
     - Configurar fallback: usar cache local de escopos (TTL 5 minutos) em caso de indisponibilidade
     - _Requirements: 1.5, 10.3, 10.4_
 
-  - [ ] 4.9 Implementar adapter Kafka para Domain Events do client-registry
+  - [x] 4.9 Implementar adapter Kafka para Domain Events do client-registry
     - Criar `KafkaDomainEventPublisher` implementando `DomainEventPublisher`
     - Publicar `ClientRegistered` no tópico `client.registered`, `ClientUpdated` em `client.updated`, `ClientDeleted` em `client.deleted`
     - Configurar Dead Letter Topic `{topic}.DLT` para eventos que falham após 3 tentativas
     - Criar `KafkaConfig` com serialização JSON do envelope de evento
     - _Requirements: 4.5, 4.6, 4.7, 4.10, 4.11_
 
-  - [ ] 4.10 Implementar REST adapter do client-registry
+  - [x] 4.10 Implementar REST adapter do client-registry
     - Criar `ClientRegistrationController` com endpoints RFC 7591/7592: `POST /register`, `GET /register/{client_id}`, `PUT /register/{client_id}`, `DELETE /register/{client_id}`
     - Criar `GlobalExceptionHandler` mapeando exceções de domínio para respostas OAuth2 (RFC 6749)
     - Criar `SecurityConfig`: `POST /register` aberto; `GET/PUT/DELETE /register/{id}` exige Registration Access Token
@@ -133,7 +133,7 @@ A ordem de implementação respeita as dependências entre serviços: scope-mana
     - Criar classe `ClientRegistryApplication` com `@SpringBootApplication`
     - _Requirements: 1.4, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8_
 
-  - [ ] 4.11 Checkpoint — client-registry
+  - [x] 4.11 Checkpoint — client-registry
     - Garantir que todos os testes do client-registry passam. Verificar que `POST /register` cria cliente e publica evento Kafka. Perguntar ao usuário se há dúvidas antes de continuar.
 
 
