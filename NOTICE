@@ -1,0 +1,21 @@
+OIDC Microservices — DDD Hexagonal Architecture
+Copyright 2026 RAPCINSKI, Heitor
+
+This product is a derivative work based on MITREid Connect.
+
+=========================================================================
+Original Work: MITREid Connect
+=========================================================================
+
+Copyright 2018 The MIT Internet Trust Consortium
+Portions copyright 2011-2013 The MITRE Corporation
+
+Licensed under the Apache License, Version 2.0.
+Original source: https://github.com/mitreid-connect/OpenID-Connect-Java-Spring-Server
+
+=========================================================================
+
+This derivative work includes substantial modifications and refactoring
+of the original MITREid Connect codebase, restructured as microservices
+following Domain-Driven Design (DDD) and Hexagonal Architecture principles.
+
