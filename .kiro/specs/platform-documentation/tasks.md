@@ -84,6 +84,45 @@ Criar o arquivo `README.md` na raiz do projeto com documentação completa da pl
   - Garantir que todos os blocos de código estão corretamente fechados e que o Markdown está bem formado
   - Perguntar ao usuário se há ajustes antes de finalizar.
 
+- [x] 10. Adicionar seção "Guia para Novos Integrantes"
+  - [x] 10.1 Adicionar subseção de Arquitetura Hexagonal
+    - Descrever as três camadas: `domain`, `application`, `infrastructure` com seus propósitos
+    - Explicar que `domain` não possui dependências de frameworks
+    - Explicar `port/in` (interfaces de casos de uso) e `port/out` (interfaces de repositórios/publishers)
+    - Adicionar diagrama Mermaid mostrando o fluxo: `infrastructure/adapter/in` → `application/service` → `domain/port/in` e `domain/port/out` ← `infrastructure/adapter/out`
+    - Explicar a regra de dependência: externo depende de interno, domínio sem frameworks
+    - _Requisitos: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
+
+  - [x] 10.2 Adicionar subseção de Organização DDD
+    - Documentar `domain/model/` com exemplos: `AccessToken`, `RefreshToken`, `AuthorizationCode`
+    - Documentar `domain/model/vo/` com exemplos: `ClientId`, `TokenValue`, `PKCEChallenge`, `Scope`
+    - Documentar `domain/port/in/` com exemplos: `IssueTokenUseCase`, `RevokeTokenUseCase`, `IntrospectTokenUseCase`
+    - Documentar `domain/port/out/` com exemplos: `AccessTokenRepository`, `DomainEventPublisher`, `ClientQueryPort`, `ScopeQueryPort`
+    - Documentar `domain/event/` com exemplos: `AccessTokenIssued`, `AccessTokenRevoked`, `RefreshTokenIssued`
+    - Documentar `domain/exception/` com exemplos: `InvalidGrantException`, `ClientNotFoundException`, `InvalidScopeException`
+    - Documentar `application/service/` com exemplos: `IssueTokenService`, `RevokeTokenService`, `IntrospectTokenService`
+    - _Requisitos: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8_
+
+  - [x] 10.3 Adicionar subseção de Estrutura de Pacotes Padrão
+    - Mostrar árvore completa de pacotes do `authorization-server` como exemplo canônico
+    - Incluir `infrastructure/adapter/in/web/`: `TokenEndpoint`, `AuthorizationEndpoint`, `IntrospectionEndpoint`, `RevocationEndpoint`, `GlobalExceptionHandler`
+    - Incluir `infrastructure/adapter/out/persistence/`: `MongoAccessTokenRepository`, `SpringDataAccessTokenRepository`, `MongoRefreshTokenRepository`, `SpringDataRefreshTokenRepository`, `document/AccessTokenDocument`, `document/RefreshTokenDocument`
+    - Incluir `infrastructure/adapter/out/messaging/`: `KafkaDomainEventPublisher`
+    - Incluir `infrastructure/adapter/out/rest/`: `ClientRegistryRestAdapter`, `ScopeManagerRestAdapter`
+    - Incluir `infrastructure/config/`: `MongoConfig`, `KafkaConfig`, `SecurityConfig`, `JwkConfig`
+    - Documentar convenções de nomenclatura: `Mongo{Entidade}Repository`, `SpringData{Entidade}Repository`, `{Entidade}Document`
+    - _Requisitos: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8_
+
+  - [x] 10.4 Adicionar subseção de Convenções e Decisões Arquiteturais
+    - Documentar isolamento de dados: cada microsserviço tem seu próprio MongoDB
+    - Documentar comunicação assíncrona via Kafka (domain/event/)
+    - Documentar comunicação síncrona via adaptadores REST (infrastructure/adapter/out/rest/)
+    - Documentar que entidades de domínio são POJOs sem anotações de framework
+    - Documentar que Value Objects são imutáveis com validação encapsulada
+    - Documentar que exceções de domínio estendem `DomainException`, mapeadas pelo `GlobalExceptionHandler`
+    - Documentar estrutura Maven: módulo raiz herdando do pom.xml pai
+    - _Requisitos: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8_
+
 ## Notas
 
 - Não há geração automática de código — o output desta spec é o próprio arquivo `README.md`

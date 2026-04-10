@@ -30,6 +30,14 @@ A plataforma é composta pelos microsserviços `api-gateway` (8090), `authorizat
 - **ID_Token**: Token JWT emitido pelo Authorization_Server contendo claims de identidade do usuário.
 - **Registration_Access_Token**: Token emitido pelo Client_Registry para gerenciar o registro de um cliente.
 - **PKCE**: Proof Key for Code Exchange (RFC 7636), extensão de segurança para o fluxo Authorization Code.
+- **Developer_Onboarding**: Novo integrante do time de desenvolvimento que está se familiarizando com a plataforma e sua arquitetura.
+- **Hexagonal_Architecture**: Padrão arquitetural (Ports & Adapters) que isola o núcleo de negócio (`domain`) de tecnologias externas via interfaces (`ports`) e implementações (`adapters`).
+- **DDD**: Domain-Driven Design — abordagem de design de software que organiza o código em torno do domínio de negócio, com entidades, value objects, eventos e exceções de domínio.
+- **Port_In**: Interface de caso de uso definida no `domain/port/in/`, implementada pela camada `application/service/`.
+- **Port_Out**: Interface de repositório ou publisher definida no `domain/port/out/`, implementada pela camada `infrastructure/adapter/out/`.
+- **Value_Object**: Objeto imutável do domínio que encapsula um conceito com semântica e validação próprias, localizado em `domain/model/vo/`.
+- **Domain_Event**: Evento publicado pelo domínio após uma operação relevante, localizado em `domain/event/` e publicado via Kafka pelo adaptador em `infrastructure/adapter/out/messaging/`.
+- **Domain_Exception**: Exceção tipada que representa uma violação de regra de negócio, localizada em `domain/exception/` e estendendo `DomainException`.
 
 ---
 
@@ -149,3 +157,69 @@ A plataforma é composta pelos microsserviços `api-gateway` (8090), `authorizat
 2. THE README SHALL documentar o formato dos logs estruturados em JSON emitidos pelos microsserviços, com os campos `timestamp`, `level`, `service`, `traceId`, `spanId` e `message`.
 3. THE README SHALL documentar que as métricas estão disponíveis no formato Prometheus e fornecer um exemplo de configuração de scrape para o Prometheus.
 4. WHEN o Developer quiser verificar a saúde de todos os serviços de uma vez, THE README SHALL documentar um comando `curl` ou script shell que consulte o `/actuator/health` de cada microsserviço sequencialmente.
+
+---
+
+### Requisito 9: Seção "Guia para Novos Integrantes" — Visão Geral da Arquitetura Hexagonal
+
+**User Story:** Como Developer_Onboarding, quero entender a arquitetura hexagonal adotada na plataforma, para que eu saiba como o código está organizado e quais são as regras de dependência entre as camadas antes de começar a contribuir.
+
+#### Critérios de Aceitação
+
+1. THE README SHALL conter uma seção "Guia para Novos Integrantes" com subseção dedicada à arquitetura hexagonal (Ports & Adapters).
+2. THE README SHALL descrever as três camadas da arquitetura hexagonal adotada: `domain` (núcleo de negócio, sem dependências externas), `application` (orquestração de casos de uso) e `infrastructure` (adaptadores de entrada e saída).
+3. THE README SHALL explicar que a camada `domain` não possui dependências de frameworks (Spring, MongoDB, Kafka) e contém apenas lógica de negócio pura.
+4. THE README SHALL explicar que os `port/in` são interfaces de casos de uso definidas no domínio e implementadas na camada `application`, e que os `port/out` são interfaces de repositórios e publishers definidas no domínio e implementadas na camada `infrastructure`.
+5. THE README SHALL conter um diagrama (Mermaid ou ASCII) ilustrando o fluxo de dependência: `infrastructure/adapter/in` → `application/service` → `domain/port/in` e `domain/port/out` ← `infrastructure/adapter/out`.
+6. THE README SHALL explicar a regra de dependência: camadas externas dependem de camadas internas, nunca o contrário, e o domínio não conhece nenhuma tecnologia de infraestrutura.
+
+---
+
+### Requisito 10: Seção "Guia para Novos Integrantes" — Organização DDD de Cada Microsserviço
+
+**User Story:** Como Developer_Onboarding, quero entender como o DDD é aplicado dentro de cada microsserviço, para que eu saiba onde encontrar entidades, value objects, eventos de domínio e exceções ao navegar pelo código.
+
+#### Critérios de Aceitação
+
+1. THE README SHALL conter uma subseção descrevendo a organização DDD dentro de cada microsserviço, com os subpacotes de `domain/` e seus propósitos.
+2. THE README SHALL documentar que `domain/model/` contém as entidades e agregados do domínio (ex: `AccessToken`, `RefreshToken`, `AuthorizationCode` no `authorization-server`).
+3. THE README SHALL documentar que `domain/model/vo/` contém os Value Objects imutáveis que encapsulam conceitos do domínio (ex: `ClientId`, `TokenValue`, `PKCEChallenge`, `Scope`).
+4. THE README SHALL documentar que `domain/port/in/` contém as interfaces de casos de uso (ex: `IssueTokenUseCase`, `RevokeTokenUseCase`, `IntrospectTokenUseCase`) e que cada interface representa uma intenção de negócio.
+5. THE README SHALL documentar que `domain/port/out/` contém as interfaces de saída do domínio (ex: `AccessTokenRepository`, `DomainEventPublisher`, `ClientQueryPort`, `ScopeQueryPort`) que abstraem persistência e comunicação externa.
+6. THE README SHALL documentar que `domain/event/` contém os eventos de domínio publicados após operações relevantes (ex: `AccessTokenIssued`, `AccessTokenRevoked`, `RefreshTokenIssued`).
+7. THE README SHALL documentar que `domain/exception/` contém as exceções de domínio tipadas que representam violações de regras de negócio (ex: `InvalidGrantException`, `ClientNotFoundException`, `InvalidScopeException`).
+8. THE README SHALL documentar que `application/service/` contém as implementações dos casos de uso definidos em `domain/port/in/`, orquestrando chamadas ao domínio e às portas de saída.
+
+---
+
+### Requisito 11: Seção "Guia para Novos Integrantes" — Estrutura de Pacotes Padrão com Exemplos Reais
+
+**User Story:** Como Developer_Onboarding, quero ver a estrutura de pacotes padrão de um microsserviço com exemplos reais de arquivos do código, para que eu possa navegar no projeto com confiança e entender onde criar novos artefatos.
+
+#### Critérios de Aceitação
+
+1. THE README SHALL conter uma subseção com a árvore de pacotes padrão completa de um microsserviço, usando o `authorization-server` como exemplo canônico.
+2. THE README SHALL mostrar a estrutura de pacotes `infrastructure/adapter/in/web/` com exemplos reais de controllers REST (ex: `TokenEndpoint`, `AuthorizationEndpoint`, `IntrospectionEndpoint`, `RevocationEndpoint`).
+3. THE README SHALL mostrar a estrutura de pacotes `infrastructure/adapter/out/persistence/` com exemplos reais de repositórios MongoDB (ex: `MongoAccessTokenRepository`, `MongoRefreshTokenRepository`) e documentos de persistência em `persistence/document/` (ex: `AccessTokenDocument`, `RefreshTokenDocument`).
+4. THE README SHALL mostrar a estrutura de pacotes `infrastructure/adapter/out/messaging/` com exemplos reais de publishers Kafka (ex: `KafkaDomainEventPublisher`).
+5. THE README SHALL mostrar a estrutura de pacotes `infrastructure/adapter/out/rest/` com exemplos reais de clientes HTTP para outros microsserviços (ex: `ClientRegistryRestAdapter`, `ScopeManagerRestAdapter`).
+6. THE README SHALL mostrar a estrutura de pacotes `infrastructure/config/` com exemplos reais de classes de configuração (ex: `MongoConfig`, `KafkaConfig`, `SecurityConfig`, `JwkConfig`).
+7. THE README SHALL documentar que o padrão de nomenclatura dos adaptadores de persistência segue `Mongo{Entidade}Repository` para a implementação e `SpringData{Entidade}Repository` para a interface Spring Data subjacente.
+8. WHEN um novo microsserviço for criado, THE README SHALL indicar que o Developer_Onboarding deve replicar a mesma estrutura de pacotes `domain/`, `application/` e `infrastructure/` com os mesmos subpacotes.
+
+---
+
+### Requisito 12: Seção "Guia para Novos Integrantes" — Convenções e Decisões Arquiteturais
+
+**User Story:** Como Developer_Onboarding, quero conhecer as convenções e decisões arquiteturais importantes adotadas na plataforma, para que eu possa contribuir com código consistente e evitar violações das regras estabelecidas.
+
+#### Critérios de Aceitação
+
+1. THE README SHALL conter uma subseção listando as convenções e decisões arquiteturais importantes adotadas em todos os microsserviços.
+2. THE README SHALL documentar que cada microsserviço possui seu próprio banco de dados MongoDB dedicado e que nenhum microsserviço acessa diretamente o banco de dados de outro (isolamento de dados por serviço).
+3. THE README SHALL documentar que a comunicação assíncrona entre microsserviços é feita exclusivamente via eventos de domínio publicados no Kafka, e que os eventos são definidos em `domain/event/`.
+4. THE README SHALL documentar que a comunicação síncrona entre microsserviços (ex: `authorization-server` consultando `client-registry` e `scope-manager`) é feita via adaptadores REST em `infrastructure/adapter/out/rest/`, implementando interfaces de porta de saída definidas no domínio.
+5. THE README SHALL documentar que as entidades de domínio em `domain/model/` são POJOs sem anotações de framework (sem `@Document`, `@Entity`, `@JsonProperty`), e que o mapeamento para documentos MongoDB é feito nas classes `*Document` em `infrastructure/adapter/out/persistence/document/`.
+6. THE README SHALL documentar que Value Objects em `domain/model/vo/` são imutáveis (campos `final`, sem setters) e encapsulam validação e semântica do conceito que representam.
+7. THE README SHALL documentar que exceções de domínio em `domain/exception/` estendem uma classe base `DomainException` e são mapeadas para respostas HTTP pelo `GlobalExceptionHandler` em `infrastructure/adapter/in/web/`.
+8. THE README SHALL documentar a estrutura do módulo Maven de cada microsserviço: módulo raiz com `pom.xml` herdando do `pom.xml` pai na raiz do projeto, com `src/main/java`, `src/main/resources` e `src/test/java`.
