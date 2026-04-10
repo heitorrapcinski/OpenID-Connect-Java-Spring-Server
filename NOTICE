@@ -19,3 +19,13 @@ This derivative work includes substantial modifications and refactoring
 of the original MITREid Connect codebase, restructured as microservices
 following Domain-Driven Design (DDD) and Hexagonal Architecture principles.
 
+=========================================================================
+AI Assistance Disclosure
+=========================================================================
+
+This work was substantially developed with the assistance of AI-based tools
+(including large language models) under the creative direction, architectural
+decisions, and intellectual supervision of the author, Heitor Rapcinski.
+The author retains full responsibility for the design, requirements, and
+overall structure of this work.
+
