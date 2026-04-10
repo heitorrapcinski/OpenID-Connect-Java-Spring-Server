@@ -123,6 +123,27 @@ Criar o arquivo `README.md` na raiz do projeto com documentação completa da pl
     - Documentar estrutura Maven: módulo raiz herdando do pom.xml pai
     - _Requisitos: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8_
 
+  - [x] 10.5 Adicionar subseção de Modelo de Negócio por Microsserviço
+    - Documentar papel, entidades, value objects, invariantes e eventos de cada microsserviço
+    - scope-manager: SystemScope, ScopeValue
+    - client-registry: Client, ClientId, ClientSecret, GrantType, RedirectUri — eventos client.registered/updated/deleted
+    - authorization-server: AccessToken, RefreshToken, AuthorizationCode, DeviceCode — eventos auth.token.*
+    - oidc-provider: UserInfo, PairwiseIdentifier, ApprovedSite — consumidor de client.registered e auth.token.issued
+    - uma-server: ResourceSet, PermissionTicket, Policy, Claim — eventos uma.resource.registered, uma.permission.created
+
+  - [x] 10.6 Adicionar subseção de MongoDB — Bancos de Dados e Coleções
+    - Documentar auth_db: access_tokens (TTL), refresh_tokens (TTL), authorization_codes, device_codes
+    - Documentar client_db: clients (optimistic locking)
+    - Documentar oidc_db: user_info, pairwise_identifiers, approved_sites, whitelisted_sites, blacklisted_sites
+    - Documentar uma_db: resource_sets (policies embutidas), permission_tickets (TTL)
+    - Documentar scope_db: system_scopes
+
+  - [x] 10.7 Adicionar subseção de Kafka — Tópicos e Fluxo de Eventos
+    - Documentar mapa completo de tópicos com produtor, consumidores e descrição
+    - Documentar estrutura do envelope de evento (eventId, eventType, aggregateId, occurredAt, serviceOrigin, payload)
+    - Documentar exemplos de payload para auth.token.issued, client.registered, uma.permission.created
+    - Documentar Dead Letter Queue (.DLT) e consumer groups
+
 ## Notas
 
 - Não há geração automática de código — o output desta spec é o próprio arquivo `README.md`

@@ -11,6 +11,9 @@
 7. [Variáveis de Ambiente](#7-variáveis-de-ambiente)
 8. [Observabilidade](#8-observabilidade)
 9. [Guia para Novos Integrantes](#9-guia-para-novos-integrantes)
+   - [9.5 Modelo de Negócio](#95-modelo-de-negócio--papel-e-responsabilidade-de-cada-microsserviço)
+   - [9.6 MongoDB — Bancos de Dados e Coleções](#96-mongodb--bancos-de-dados-e-coleções)
+   - [9.7 Kafka — Tópicos e Fluxo de Eventos](#97-kafka--tópicos-e-fluxo-de-eventos)
 
 ---
 
@@ -1340,3 +1343,343 @@ Estas convenções se aplicam a todos os microsserviços da plataforma e devem s
 **Exceções de domínio e GlobalExceptionHandler:** exceções em `domain/exception/` estendem a classe base `DomainException`. O `GlobalExceptionHandler` em `infrastructure/adapter/in/web/` captura essas exceções e as mapeia para respostas HTTP com os status codes e corpos de erro apropriados (ex: `InvalidGrantException` → `400 Bad Request`, `ClientNotFoundException` → `404 Not Found`).
 
 **Estrutura Maven:** cada microsserviço é um módulo Maven com `pom.xml` herdando do `pom.xml` pai na raiz do projeto. A estrutura de diretórios segue o padrão Maven: `src/main/java`, `src/main/resources` e `src/test/java`.
+
+---
+
+### 9.5 Modelo de Negócio — Papel e Responsabilidade de Cada Microsserviço
+
+Esta subseção descreve o papel de negócio de cada microsserviço, suas entidades de domínio e os relacionamentos entre elas.
+
+---
+
+#### scope-manager — Catálogo de Escopos do Sistema
+
+**Papel:** repositório central de todos os escopos OAuth 2.0 reconhecidos pela plataforma. É o primeiro serviço a subir, pois os demais dependem dele para validar escopos solicitados por clientes.
+
+**Entidade principal:**
+
+| Entidade | Tipo | Campos principais |
+|---|---|---|
+| `SystemScope` | Aggregate Root | `value` (ScopeValue), `description`, `icon`, `defaultScope`, `restricted` |
+
+**Value Objects:**
+- `ScopeValue` — encapsula e valida o identificador do escopo (ex: `"openid"`, `"profile"`, `"read"`)
+
+**Relacionamentos:** nenhum relacionamento direto com outros bounded contexts. Os demais microsserviços consultam o scope-manager via REST (`ScopeManagerRestAdapter`) para validar escopos.
+
+---
+
+#### client-registry — Registro de Clientes OAuth 2.0
+
+**Papel:** implementa o Dynamic Client Registration (RFC 7591/7592). Gerencia o ciclo de vida completo de clientes OAuth 2.0 — registro, consulta, atualização e remoção.
+
+**Entidade principal:**
+
+| Entidade | Tipo | Campos principais |
+|---|---|---|
+| `Client` | Aggregate Root | `clientId`, `clientSecret`, `clientName`, `redirectUris`, `grantTypes`, `responseTypes`, `scope`, `tokenEndpointAuthMethod`, `registrationAccessToken`, `createdAt` |
+
+**Value Objects:**
+- `ClientId` — identificador único do cliente (UUID)
+- `ClientSecret` — segredo do cliente (hashed)
+- `GrantType` — tipo de concessão OAuth 2.0 (`authorization_code`, `client_credentials`, `refresh_token`, `implicit`)
+- `ResponseType` — tipo de resposta (`code`, `token`)
+- `RedirectUri` — URI de redirecionamento com validação de formato
+- `SectorIdentifierUri` — URI para cálculo de subject pairwise
+
+**Invariantes de domínio:**
+- `response_type=code` exige `grant_type=authorization_code`
+- `response_type=token` exige `grant_type=implicit`
+- Aplicações do tipo `WEB` só aceitam redirect URIs com `https://` ou `http://localhost`
+
+**Eventos publicados:**
+
+| Evento | Tópico Kafka | Quando |
+|---|---|---|
+| `ClientRegistered` | `client.registered` | Novo cliente registrado |
+| `ClientUpdated` | `client.updated` | Metadados do cliente atualizados |
+| `ClientDeleted` | `client.deleted` | Cliente removido |
+
+**Relacionamentos:** consulta o scope-manager para validar os escopos solicitados no registro.
+
+---
+
+#### authorization-server — Servidor de Autorização OAuth 2.0
+
+**Papel:** núcleo da plataforma. Implementa os fluxos OAuth 2.0 (Authorization Code + PKCE, Client Credentials, Refresh Token, Device Authorization). Emite, valida, revoga e introspecta tokens JWT.
+
+**Entidades principais:**
+
+| Entidade | Tipo | Campos principais |
+|---|---|---|
+| `AccessToken` | Aggregate Root | `id`, `tokenValue`, `clientId`, `subject`, `scope`, `expiration`, `tokenType`, `refreshTokenId`, `permissions[]` |
+| `RefreshToken` | Aggregate Root | `id`, `tokenValue`, `clientId`, `subject`, `expiration`, `used` |
+| `AuthorizationCode` | Aggregate | `id`, `codeValue`, `clientId`, `expiration`, `used`, `pkceChallenge` |
+| `DeviceCode` | Aggregate | `id`, `deviceCode`, `userCode`, `clientId`, `expiration`, `status` |
+
+**Value Objects:**
+- `TokenValue` — valor JWT do token
+- `ClientId` — referência ao cliente (por ID, sem join)
+- `Subject` — identificador do usuário autenticado (`sub`)
+- `Scope` — conjunto de escopos concedidos
+- `PKCEChallenge` — par `code_challenge` / `code_challenge_method` para validação PKCE
+- `CodeValue` — valor do authorization code
+- `AuthenticationHolder` — contexto de autenticação (scopes, parâmetros da requisição original)
+
+**Invariantes de domínio:**
+- `AccessToken` e `RefreshToken` exigem `expiration` não nulo
+- `AuthorizationCode` só pode ser consumido uma vez (`used=true` após uso — `AuthorizationCodeReusedException`)
+- `RefreshToken` só pode ser usado uma vez (`used=true` após uso — `InvalidGrantException`)
+
+**Eventos publicados:**
+
+| Evento | Tópico Kafka | Quando |
+|---|---|---|
+| `AccessTokenIssued` | `auth.token.issued` | Access token emitido |
+| `AccessTokenRevoked` | `auth.token.revoked` | Access token revogado |
+| `RefreshTokenIssued` | `auth.refresh.issued` | Refresh token emitido |
+| `RefreshTokenRevoked` | `auth.refresh.revoked` | Refresh token revogado/usado |
+
+**Relacionamentos:**
+- Consulta o `client-registry` via REST (`ClientRegistryRestAdapter`) para validar o cliente em cada requisição
+- Consulta o `scope-manager` via REST (`ScopeManagerRestAdapter`) para validar os escopos solicitados
+
+---
+
+#### oidc-provider — Provedor OpenID Connect 1.0
+
+**Papel:** implementa a camada de identidade sobre o OAuth 2.0. Fornece o endpoint `/userinfo`, o discovery document (`/.well-known/openid-configuration`), o JWKS e suporte a subject pairwise.
+
+**Entidades principais:**
+
+| Entidade | Tipo | Campos principais |
+|---|---|---|
+| `UserInfo` | Aggregate Root | `sub`, `name`, `givenName`, `familyName`, `email`, `emailVerified`, `phoneNumber`, `gender`, `birthdate`, `address`, `picture` |
+| `PairwiseIdentifier` | Entidade | `sub`, `sectorIdentifier`, `pairwiseSub` |
+| `ApprovedSite` | Entidade | `userId`, `clientId`, `approvedScopes`, `createdAt` |
+| `WhitelistedSite` | Entidade | `clientId`, `allowedScopes` |
+| `BlacklistedSite` | Entidade | `uri` |
+
+**Value Objects:**
+- `Subject` — identificador público do usuário (`sub`)
+- `UserSub` — sub pairwise calculado por setor
+- `SectorIdentifier` — URI de setor para cálculo de sub pairwise
+- `Address` — endereço postal estruturado (record imutável com `formatted`, `streetAddress`, `locality`, `region`, `postalCode`, `country`)
+
+**Lógica de negócio:**
+- `UserInfo.filterByClaims(scopes)` — retorna apenas as claims permitidas pelos escopos concedidos (`profile`, `email`, `phone`, `address`)
+- Subject pairwise: clientes com `subjectType=pairwise` recebem um `sub` diferente por `sectorIdentifierUri`, garantindo que o mesmo usuário tenha identidades distintas em diferentes clientes
+
+**Eventos consumidos:**
+
+| Tópico Kafka | Ação |
+|---|---|
+| `client.registered` | Prepara identificador pairwise se `subjectType=pairwise` |
+| `auth.token.issued` | Auditoria de tokens emitidos |
+
+**Relacionamentos:** consulta o `authorization-server` via REST (`AuthorizationServerRestAdapter`) para introspectar tokens ao servir o `/userinfo`.
+
+---
+
+#### uma-server — Servidor UMA 2.0
+
+**Papel:** implementa o protocolo User-Managed Access 2.0. Permite que o Resource Owner registre recursos protegidos e defina políticas de acesso. Emite Permission Tickets e valida Requesting Party Tokens (RPT).
+
+**Entidades principais:**
+
+| Entidade | Tipo | Campos principais |
+|---|---|---|
+| `ResourceSet` | Aggregate Root | `id`, `name`, `uri`, `type`, `scopes[]`, `iconUri`, `owner`, `clientId`, `policies[]` |
+| `PermissionTicket` | Aggregate Root | `id`, `ticket`, `expiration`, `permission`, `claimsSupplied[]`, `used` |
+
+**Value Objects:**
+- `ResourceSetId` — identificador único do recurso (UUID)
+- `Owner` — subject do Resource Owner
+- `ClientId` — referência ao cliente do Resource Server
+- `TicketValue` — valor opaco do permission ticket
+- `Permission` — par `(resourceSetId, scopes[])` que descreve o acesso solicitado
+- `ClaimsSupplied` — claims fornecidas pelo Requesting Party para satisfazer políticas
+
+**Estrutura aninhada de `ResourceSet`:**
+- `Policy` — política de acesso com `name`, `scopes[]` e `claimsRequired[]`
+- `Claim` — requisito de claim com `name`, `claimType`, `value`, `claimTokenFormat[]`, `issuer[]`
+
+**Invariantes de domínio:**
+- `PermissionTicket` expira e lança `PermissionTicketExpiredException` se usado após a expiração
+- `ResourceSet` exige `id`, `name` e `owner` não nulos
+
+**Eventos publicados:**
+
+| Evento | Tópico Kafka | Quando |
+|---|---|---|
+| `ResourceSetRegistered` | `uma.resource.registered` | Novo ResourceSet registrado |
+| `PermissionTicketCreated` | `uma.permission.created` | Permission Ticket criado |
+
+**Eventos consumidos:**
+
+| Tópico Kafka | Ação |
+|---|---|
+| `auth.token.revoked` | Invalida RPTs associados ao token revogado |
+
+---
+
+#### api-gateway — Gateway de Entrada
+
+**Papel:** ponto de entrada único para todos os clientes externos. Roteia requisições para os microsserviços internos sem lógica de negócio própria. Não possui banco de dados nem publica eventos.
+
+**Relacionamentos:** roteia para todos os microsserviços internos com base no path da requisição.
+
+---
+
+### 9.6 MongoDB — Bancos de Dados e Coleções
+
+Cada microsserviço possui seu próprio banco de dados MongoDB dedicado. Nenhum microsserviço acessa o banco de outro.
+
+#### `auth_db` — authorization-server (porta 27017)
+
+| Coleção | Documento | Índices | TTL |
+|---|---|---|---|
+| `access_tokens` | `AccessTokenDocument` | `clientId`, `authenticationHolder.userSub`, `refreshTokenId`, `approvedSiteId` | Sim — `expiration` (auto-delete ao expirar) |
+| `refresh_tokens` | `RefreshTokenDocument` | `clientId`, `authenticationHolder.userSub` | Sim — `expiration` (auto-delete ao expirar) |
+| `authorization_codes` | `AuthorizationCodeDocument` | `codeValue`, `clientId` | Sim — `expiration` |
+| `device_codes` | `DeviceCodeDocument` | `deviceCode`, `userCode`, `clientId` | Sim — `expiration` |
+
+**Destaques:**
+- TTL index no campo `expiration` garante limpeza automática de tokens expirados sem jobs de manutenção
+- `authenticationHolder` é um subdocumento embutido (não uma referência) contendo o contexto de autenticação original
+- `permissions[]` em `access_tokens` armazena os ResourceSets e escopos UMA concedidos ao RPT
+
+#### `client_db` — client-registry (porta 27018)
+
+| Coleção | Documento | Índices |
+|---|---|---|
+| `clients` | `ClientDocument` | `clientId` (unique), `version` (optimistic locking) |
+
+**Destaques:**
+- `_id` = `clientId` (UUID gerado no registro)
+- `@Version` para controle de concorrência otimista — evita atualizações simultâneas conflitantes
+- `registrationAccessToken` armazenado em texto plano — usado para autenticar operações de gerenciamento do cliente (GET/PUT/DELETE `/register/{client_id}`)
+
+#### `oidc_db` — oidc-provider (porta 27019)
+
+| Coleção | Documento | Índices |
+|---|---|---|
+| `user_info` | `UserInfoDocument` | `preferredUsername` (unique), `email` |
+| `pairwise_identifiers` | `PairwiseIdentifierDocument` | `sub`, `sectorIdentifier` |
+| `approved_sites` | `ApprovedSiteDocument` | `userId`, `clientId` |
+| `whitelisted_sites` | `WhitelistedSiteDocument` | `clientId` |
+| `blacklisted_sites` | `BlacklistedSiteDocument` | `uri` |
+
+**Destaques:**
+- `user_info._id` = `sub` do usuário
+- `pairwise_identifiers` mapeia `(sub, sectorIdentifier)` → `pairwiseSub` para clientes com `subjectType=pairwise`
+- `approved_sites` registra os consentimentos do usuário por cliente e escopos aprovados
+
+#### `uma_db` — uma-server (porta 27020)
+
+| Coleção | Documento | Índices |
+|---|---|---|
+| `resource_sets` | `ResourceSetDocument` | `owner`, `clientId`, índice composto `(owner, clientId)` |
+| `permission_tickets` | `PermissionTicketDocument` | `ticket` (unique), `expiration` |
+
+**Destaques:**
+- `resource_sets.policies[]` é um array de subdocumentos embutidos — cada policy contém `scopes[]` e `claimsRequired[]`
+- `permission_tickets` tem TTL no campo `expiration` para limpeza automática de tickets expirados
+- `@Version` em `resource_sets` para controle de concorrência otimista
+
+#### `scope_db` — scope-manager (porta 27021)
+
+| Coleção | Documento | Índices |
+|---|---|---|
+| `system_scopes` | `SystemScopeDocument` | `value` (unique) |
+
+**Destaques:**
+- `_id` = `value` do escopo (ex: `"openid"`) — o próprio valor é o identificador
+- Coleção pequena e estável, populada pelo `mongo-seed` na inicialização
+
+---
+
+### 9.7 Kafka — Tópicos e Fluxo de Eventos
+
+O Kafka opera em modo KRaft (sem ZooKeeper) na porta 9092. Todos os eventos são serializados em JSON.
+
+#### Mapa completo de tópicos
+
+| Tópico | Produtor | Consumidores | Descrição |
+|---|---|---|---|
+| `client.registered` | `client-registry` | `oidc-provider` | Cliente OAuth 2.0 registrado |
+| `client.updated` | `client-registry` | — | Metadados do cliente atualizados |
+| `client.deleted` | `client-registry` | — | Cliente removido |
+| `auth.token.issued` | `authorization-server` | `oidc-provider` | Access token emitido |
+| `auth.token.revoked` | `authorization-server` | `uma-server` | Access token revogado |
+| `auth.refresh.issued` | `authorization-server` | — | Refresh token emitido |
+| `auth.refresh.revoked` | `authorization-server` | — | Refresh token revogado/usado |
+| `uma.resource.registered` | `uma-server` | — | ResourceSet UMA registrado |
+| `uma.permission.created` | `uma-server` | — | Permission Ticket criado |
+
+#### Estrutura dos eventos
+
+Todos os eventos seguem o mesmo envelope:
+
+```json
+{
+  "eventId": "uuid-v4",
+  "eventType": "AccessTokenIssued",
+  "aggregateId": "id-do-agregado",
+  "occurredAt": "2024-01-01T00:00:00Z",
+  "serviceOrigin": "authorization-server",
+  "traceId": "trace-id-opcional",
+  "payload": { ... }
+}
+```
+
+**Exemplos de payload por tópico:**
+
+`auth.token.issued`:
+```json
+{
+  "payload": {
+    "tokenId": "abc123",
+    "clientId": "my-client",
+    "subject": "user-sub-123",
+    "scope": ["openid", "profile", "email"]
+  }
+}
+```
+
+`client.registered`:
+```json
+{
+  "payload": {
+    "clientId": "a1b2c3d4",
+    "clientName": "My SPA",
+    "grantTypes": ["authorization_code", "refresh_token"],
+    "subjectType": "public",
+    "sectorIdentifierUri": null
+  }
+}
+```
+
+`uma.permission.created`:
+```json
+{
+  "payload": {
+    "ticketId": "ticket-uuid",
+    "resourceSetId": "resource-uuid",
+    "requestedScopes": ["read"]
+  }
+}
+```
+
+#### Dead Letter Queue
+
+Mensagens que falham após 2 tentativas de reprocessamento são enviadas para um tópico DLQ com sufixo `.DLT` (ex: `auth.token.issued.DLT`). O `DefaultErrorHandler` com `FixedBackOff(0ms, 2 tentativas)` e `DeadLetterPublishingRecoverer` gerencia esse comportamento em todos os microsserviços.
+
+#### Consumer Groups
+
+| Consumer Group | Microsserviço | Tópicos consumidos |
+|---|---|---|
+| `auth-server-client-cache` | `authorization-server` | (cache interno de clientes) |
+| `oidc-provider-client-events-infra` | `oidc-provider` | `client.registered` |
+| `oidc-provider-audit-infra` | `oidc-provider` | `auth.token.issued` |
+| `uma-server-token-events` | `uma-server` | `auth.token.revoked` |
